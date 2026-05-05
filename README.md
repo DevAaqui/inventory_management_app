@@ -48,7 +48,7 @@ This creates `organizations`, `roles` (seeded with `admin`), `users` (with `role
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). You’ll be sent to **Log in**; use **Sign up** to create an organization and first user.
 
 ### Production build (optional)
 

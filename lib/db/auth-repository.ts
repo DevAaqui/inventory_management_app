@@ -1,6 +1,8 @@
 import { UniqueConstraintError } from "sequelize";
-import { ADMIN_ROLE_ID, Organization, User } from "./models";
 import { getSequelize } from "./sequelize";
+import { Organization } from "./models/organization";
+import { ADMIN_ROLE_ID } from "./models/role";
+import { User } from "./models/user";
 
 export type UserWithOrg = {
   userId: string;
@@ -15,22 +17,14 @@ export async function findUserWithOrgByEmail(
 ): Promise<UserWithOrg | null> {
   getSequelize();
   const normalized = email.trim().toLowerCase();
+
   const user = await User.findOne({
     where: { email: normalized },
-    include: [
-      {
-        model: Organization,
-        as: "organization",
-        required: true,
-        attributes: ["name"],
-      },
-    ],
   });
 
   if (!user) return null;
 
-  type Loaded = User & { organization?: Organization };
-  const org = (user as Loaded).organization;
+  const org = await Organization.findByPk(user.organizationId);
   if (!org) return null;
 
   return {
