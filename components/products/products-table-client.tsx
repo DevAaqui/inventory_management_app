@@ -1,9 +1,10 @@
 "use client";
 
-import { deleteProductFormAction } from "@/app/actions/products";
+import { deleteProductAction } from "@/app/actions/products";
 import type { SortDescriptor } from "@heroui/react";
-import { AlertDialog, Button, Input, Table, cn } from "@heroui/react";
+import { AlertDialog, Button, Input, Table, cn, toast } from "@heroui/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 export type ProductRow = {
@@ -119,8 +120,7 @@ export function ProductsTableClient({
     if (!s) return products;
     return products.filter(
       (p) =>
-        p.name.toLowerCase().includes(s) ||
-        p.sku.toLowerCase().includes(s),
+        p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s),
     );
   }, [products, q]);
 
@@ -192,10 +192,7 @@ export function ProductsTableClient({
                 </Table.Column>
                 <Table.Column allowsSorting id="sellingPrice">
                   {({ sortDirection }) => (
-                    <SortHeader
-                      label="Selling"
-                      sortDirection={sortDirection}
-                    />
+                    <SortHeader label="Selling" sortDirection={sortDirection} />
                   )}
                 </Table.Column>
                 <Table.Column className="text-right">Actions</Table.Column>
@@ -242,46 +239,75 @@ export function ProductsTableClient({
 }
 
 export function DeleteProductButton({ productId }: { productId: string }) {
-  const formId = `delete-product-${productId}`;
+  const router = useRouter();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleConfirmDelete() {
+    setIsDeleting(true);
+    try {
+      const result = await deleteProductAction(productId);
+      if ("error" in result) {
+        setDialogOpen(false);
+        toast.danger("Could not delete product", {
+          description: result.error,
+        });
+        return;
+      }
+      setDialogOpen(false);
+      toast.success("Product deleted", {
+        description: "It has been removed from your inventory.",
+      });
+      router.push("/products");
+      router.refresh();
+    } catch {
+      setDialogOpen(false);
+      toast.danger("Something went wrong", {
+        description: "Please try again.",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
-    <>
-      <AlertDialog>
-        <Button
-          type="button"
-          variant="tertiary"
-          className="text-danger hover:text-danger h-auto min-h-0 px-0 py-0 text-xs font-medium underline"
-        >
-          Delete
-        </Button>
-        <AlertDialog.Backdrop>
-          <AlertDialog.Container>
-            <AlertDialog.Dialog className="sm:max-w-[400px]">
-              <AlertDialog.CloseTrigger />
-              <AlertDialog.Header>
-                <AlertDialog.Icon status="danger" />
-                <AlertDialog.Heading>Delete this product?</AlertDialog.Heading>
-              </AlertDialog.Header>
-              <AlertDialog.Body>
-                <p className="text-foreground/80 text-sm">
-                  This will permanently remove the product from your inventory.
-                  This action cannot be undone.
-                </p>
-              </AlertDialog.Body>
-              <AlertDialog.Footer>
-                <Button slot="close" variant="tertiary">
-                  Cancel
-                </Button>
-                <Button form={formId} type="submit" variant="danger">
-                  Delete product
-                </Button>
-              </AlertDialog.Footer>
-            </AlertDialog.Dialog>
-          </AlertDialog.Container>
-        </AlertDialog.Backdrop>
-      </AlertDialog>
-      <form id={formId} action={deleteProductFormAction} hidden>
-        <input name="id" type="hidden" value={productId} />
-      </form>
-    </>
+    <AlertDialog isOpen={dialogOpen} onOpenChange={setDialogOpen}>
+      <Button
+        type="button"
+        variant="tertiary"
+        className="text-danger hover:text-danger h-auto min-h-0 px-0 py-0 text-xs font-medium underline"
+      >
+        Delete
+      </Button>
+      <AlertDialog.Backdrop>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-[400px]">
+            <AlertDialog.CloseTrigger />
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>Delete this product?</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <p className="text-foreground/80 text-sm">
+                This will permanently remove the product from your inventory.
+                This action cannot be undone.
+              </p>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <Button slot="close" variant="tertiary" isDisabled={isDeleting}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                isDisabled={isDeleting}
+                onPress={() => void handleConfirmDelete()}
+              >
+                {isDeleting ? "Deleting…" : "Delete product"}
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
+    </AlertDialog>
   );
 }

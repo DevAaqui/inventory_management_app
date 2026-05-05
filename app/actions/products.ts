@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { UniqueConstraintError } from "sequelize";
 import { redirect } from "next/navigation";
 import { parseProductFormData } from "@/lib/products/parse-product-form";
@@ -76,15 +77,21 @@ export async function updateProductAction(
   redirect("/products");
 }
 
-export async function deleteProductFormAction(
-  formData: FormData,
-): Promise<void> {
+export type DeleteProductResult = { ok: true } | { error: string };
+
+export async function deleteProductAction(
+  productId: string,
+): Promise<DeleteProductResult> {
   const organizationId = await requireOrganizationId();
-  const id = String(formData.get("id") ?? "").trim();
+  const id = String(productId ?? "").trim();
   if (!id) {
-    redirect("/products");
+    return { error: "Missing product" };
   }
 
-  await deleteProductForOrganization(organizationId, id);
-  redirect("/products");
+  const deleted = await deleteProductForOrganization(organizationId, id);
+  if (!deleted) {
+    return { error: "Product not found" };
+  }
+  revalidatePath("/products");
+  return { ok: true };
 }
