@@ -7,6 +7,45 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+function EditProductIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <path d="m15 5 4 4" />
+    </svg>
+  );
+}
+
+function DeleteProductIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  );
+}
+
 export type ProductRow = {
   id: string;
   name: string;
@@ -128,6 +167,7 @@ export function ProductsTableClient({
     () => sortProductRows(filtered, sortDescriptor),
     [filtered, sortDescriptor],
   );
+  console.log(sorted);
 
   const emptyMessage =
     products.length === 0
@@ -207,24 +247,35 @@ export function ProductsTableClient({
                     <Table.Cell>{p.quantityOnHand}</Table.Cell>
                     <Table.Cell>
                       {p.isLowStock ? (
-                        <span className="text-danger font-medium">Low</span>
+                        <>
+                          <span className="text-danger font-medium">Low</span>
+                          <span className="text-danger/65 ml-1 text-xs">
+                            (≤ {p.effectiveThreshold})
+                          </span>
+                        </>
                       ) : (
-                        <span className="text-foreground/50">OK</span>
+                        <>
+                          <span className="text-success font-medium">OK</span>
+                          <span className="text-success/65 ml-1 text-xs">
+                            (≤ {p.effectiveThreshold})
+                          </span>
+                        </>
                       )}
-                      <span className="text-foreground/50 ml-1 text-xs">
-                        (≤ {p.effectiveThreshold})
-                      </span>
                     </Table.Cell>
                     <Table.Cell>{formatMoney(p.sellingPrice)}</Table.Cell>
                     <Table.Cell className="text-right">
-                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                      <div className="flex flex-wrap items-center justify-end gap-1">
                         <Link
-                          className="text-primary text-xs font-medium underline"
+                          className="text-primary hover:bg-content2/80 inline-flex size-8 items-center justify-center rounded-md"
                           href={`/products/${p.id}/edit`}
+                          aria-label={`Edit ${p.name}`}
                         >
-                          Edit
+                          <EditProductIcon className="size-4 shrink-0" />
                         </Link>
-                        <DeleteProductButton productId={p.id} />
+                        <DeleteProductButton
+                          productId={p.id}
+                          productName={p.name}
+                        />
                       </div>
                     </Table.Cell>
                   </Table.Row>
@@ -238,7 +289,13 @@ export function ProductsTableClient({
   );
 }
 
-export function DeleteProductButton({ productId }: { productId: string }) {
+export function DeleteProductButton({
+  productId,
+  productName,
+}: {
+  productId: string;
+  productName?: string;
+}) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -275,9 +332,14 @@ export function DeleteProductButton({ productId }: { productId: string }) {
       <Button
         type="button"
         variant="tertiary"
-        className="text-danger hover:text-danger h-auto min-h-0 px-0 py-0 text-xs font-medium underline"
+        aria-label={
+          productName
+            ? `Delete product ${productName}`
+            : "Delete product"
+        }
+        className="text-danger hover:text-danger hover:bg-danger/10 inline-flex size-8 min-h-0 min-w-0 items-center justify-center rounded-md p-0"
       >
-        Delete
+        <DeleteProductIcon className="size-4 shrink-0" />
       </Button>
       <AlertDialog.Backdrop>
         <AlertDialog.Container>
