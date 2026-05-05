@@ -1,7 +1,6 @@
 import { updateProductAction } from "@/app/actions/products";
 import { getProductForOrganization } from "@/lib/db/product-repository";
 import { getSession } from "@/lib/session";
-import { DeleteProductButton } from "@/components/products/products-table-client";
 import { ProductForm } from "@/components/products/product-form";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -54,12 +53,6 @@ export default async function EditProductPage({
         formAction={boundUpdate}
         mode="edit"
       />
-      <div className="mt-10 border-default-200 border-t pt-8">
-        <h2 className="text-foreground/80 mb-3 text-sm font-medium">
-          Danger zone
-        </h2>
-        <DeleteProductButton productId={product.id} />
-      </div>
     </main>
   );
 }

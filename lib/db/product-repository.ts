@@ -1,13 +1,21 @@
-import { literal } from "sequelize";
+import { literal, type ModelStatic } from "sequelize";
 import { getSequelize } from "./sequelize";
-import { Organization } from "./models/organization";
-import { Product } from "./models/product";
+import type { Organization } from "./models/organization";
+import type { Product } from "./models/product";
+
+/** Use Sequelize-registered models so queries always hit the class that `initModels` wired up (avoids duplicate-module / Turbopack issues). */
+function organizationModel(): ModelStatic<Organization> {
+  return getSequelize().model("Organization") as ModelStatic<Organization>;
+}
+
+function productModel(): ModelStatic<Product> {
+  return getSequelize().model("Product") as ModelStatic<Product>;
+}
 
 export async function getOrganizationDefaultLowStock(
   organizationId: string,
 ): Promise<number> {
-  getSequelize();
-  const org = await Organization.findByPk(organizationId, {
+  const org = await organizationModel().findByPk(organizationId, {
     attributes: ["defaultLowStockThreshold"],
   });
   return org?.defaultLowStockThreshold ?? 5;
@@ -16,8 +24,7 @@ export async function getOrganizationDefaultLowStock(
 export async function listProductsByOrganization(
   organizationId: string,
 ): Promise<Product[]> {
-  getSequelize();
-  return Product.findAll({
+  return productModel().findAll({
     where: { organizationId },
     // Unqualified column avoids bad SQL when Sequelize aliases the table (e.g. subqueries).
     order: literal("`updated_at` DESC"),
@@ -28,8 +35,7 @@ export async function getProductForOrganization(
   organizationId: string,
   productId: string,
 ): Promise<Product | null> {
-  getSequelize();
-  return Product.findOne({
+  return productModel().findOne({
     where: { id: productId, organizationId },
   });
 }
@@ -50,8 +56,7 @@ export async function createProductForOrganization(
   organizationId: string,
   input: CreateProductInput,
 ): Promise<Product> {
-  getSequelize();
-  return Product.create({
+  return productModel().create({
     organizationId,
     name: input.name,
     sku: input.sku,
@@ -68,8 +73,7 @@ export async function updateProductForOrganization(
   productId: string,
   input: UpdateProductInput,
 ): Promise<Product | null> {
-  getSequelize();
-  const product = await Product.findOne({
+  const product = await productModel().findOne({
     where: { id: productId, organizationId },
   });
   if (!product) return null;
@@ -89,8 +93,7 @@ export async function deleteProductForOrganization(
   organizationId: string,
   productId: string,
 ): Promise<boolean> {
-  getSequelize();
-  const n = await Product.destroy({
+  const n = await productModel().destroy({
     where: { id: productId, organizationId },
   });
   return n > 0;
