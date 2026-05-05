@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteProductAction } from "@/app/actions/products";
+import { BulkUploadProductsButton } from "@/components/products/bulk-upload-products";
 import type { SortDescriptor } from "@heroui/react";
 import { AlertDialog, Button, Input, Table, cn, toast } from "@heroui/react";
 import Link from "next/link";
@@ -167,7 +168,6 @@ export function ProductsTableClient({
     () => sortProductRows(filtered, sortDescriptor),
     [filtered, sortDescriptor],
   );
-  console.log(sorted);
 
   const emptyMessage =
     products.length === 0
@@ -184,12 +184,15 @@ export function ProductsTableClient({
           placeholder="Search name or SKU…"
           value={q}
         />
-        <Link
-          className="bg-foreground text-background hover:opacity-90 inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold"
-          href="/products/new"
-        >
-          Add product
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <BulkUploadProductsButton />
+          <Link
+            className="bg-foreground text-background hover:opacity-90 inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold"
+            href="/products/new"
+          >
+            Add product
+          </Link>
+        </div>
       </div>
 
       <p className="text-foreground/60 text-xs">

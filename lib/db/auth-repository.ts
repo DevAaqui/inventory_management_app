@@ -1,12 +1,21 @@
-import { UniqueConstraintError } from "sequelize";
+import { type ModelStatic, UniqueConstraintError } from "sequelize";
 import { getSequelize } from "./sequelize";
-import { Organization } from "./models/organization";
+import type { Organization } from "./models/organization";
 import { ADMIN_ROLE_ID } from "./models/role";
-import { User } from "./models/user";
+import type { User } from "./models/user";
+
+/** Registered Sequelize model (avoids duplicate-module / Turbopack HMR issues). */
+function userModel(): ModelStatic<User> {
+  return getSequelize().model("User") as ModelStatic<User>;
+}
+
+function organizationModel(): ModelStatic<Organization> {
+  return getSequelize().model("Organization") as ModelStatic<Organization>;
+}
 
 export async function getUserEmailById(userId: string): Promise<string | null> {
   getSequelize();
-  const user = await User.findByPk(userId, { attributes: ["email"] });
+  const user = await userModel().findByPk(userId, { attributes: ["email"] });
   return user?.email ?? null;
 }
 
@@ -24,13 +33,13 @@ export async function findUserWithOrgByEmail(
   getSequelize();
   const normalized = email.trim().toLowerCase();
 
-  const user = await User.findOne({
+  const user = await userModel().findOne({
     where: { email: normalized },
   });
 
   if (!user) return null;
 
-  const org = await Organization.findByPk(user.organizationId);
+  const org = await organizationModel().findByPk(user.organizationId);
   if (!org) return null;
 
   return {
@@ -62,14 +71,14 @@ export async function createOrganizationAndUser(input: {
 
   try {
     return await sequelize.transaction(async (transaction) => {
-      const org = await Organization.create(
+      const org = await organizationModel().create(
         {
           name: input.organizationName.trim(),
           defaultLowStockThreshold: 5,
         },
         { transaction },
       );
-      const user = await User.create(
+      const user = await userModel().create(
         {
           email,
           passwordHash: input.passwordHash,

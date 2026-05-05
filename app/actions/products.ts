@@ -1,15 +1,19 @@
 "use server";
 
+import { Buffer } from "node:buffer";
 import { revalidatePath } from "next/cache";
 import { UniqueConstraintError } from "sequelize";
 import { redirect } from "next/navigation";
 import { parseProductFormData } from "@/lib/products/parse-product-form";
 import {
   adjustProductStock,
+  bulkCreateProductsForOrganization,
   createProductForOrganization,
   deleteProductForOrganization,
+  findExistingProductSkus,
   updateProductForOrganization,
 } from "@/lib/db/product-repository";
+import { parseProductsXlsxBuffer } from "@/lib/products/xlsx-product-import";
 import { parseAdjustStockFormData } from "@/lib/products/parse-adjust-stock";
 import { getSession } from "@/lib/session";
 
@@ -118,6 +122,61 @@ export async function deleteProductAction(
 export type AdjustStockActionResult =
   | { ok: true; quantityOnHand: number }
   | { error: string };
+
+const MAX_XLSX_BYTES = 5 * 1024 * 1024;
+
+export type BulkUploadProductsResult =
+  | { ok: true; created: number }
+  | { error: string; issues?: { row: number; message: string }[] };
+
+export async function bulkUploadProductsAction(
+  formData: FormData,
+): Promise<BulkUploadProductsResult> {
+  const organizationId = await requireOrganizationId();
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    return { error: "No file uploaded" };
+  }
+  if (file.size === 0) {
+    return { error: "File is empty" };
+  }
+  if (file.size > MAX_XLSX_BYTES) {
+    return { error: "File too large (max 5 MB)" };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const parsed = await parseProductsXlsxBuffer(buffer);
+  if (!parsed.ok) {
+    return { error: parsed.error, issues: parsed.issues };
+  }
+
+  const skus = parsed.items.map((i) => i.sku);
+  const existing = await findExistingProductSkus(organizationId, skus);
+  if (existing.length > 0) {
+    const preview = existing.slice(0, 15).join(", ");
+    const more = existing.length > 15 ? "…" : "";
+    return {
+      error: `These SKUs already exist: ${preview}${more}`,
+    };
+  }
+
+  try {
+    const created = await bulkCreateProductsForOrganization(
+      organizationId,
+      parsed.items,
+    );
+    revalidatePath("/products");
+    return { ok: true, created };
+  } catch (e) {
+    if (e instanceof UniqueConstraintError) {
+      return {
+        error:
+          "One or more SKUs already exist for your organization.",
+      };
+    }
+    throw e;
+  }
+}
 
 export async function adjustStockAction(
   productId: string,

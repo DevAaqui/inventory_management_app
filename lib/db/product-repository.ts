@@ -1,4 +1,4 @@
-import { literal, type ModelStatic } from "sequelize";
+import { literal, Op, type ModelStatic } from "sequelize";
 import { getSequelize } from "./sequelize";
 import type { Organization } from "./models/organization";
 import type { Product } from "./models/product";
@@ -112,6 +112,47 @@ export async function createProductForOrganization(
     sellingPrice: input.sellingPrice,
     lowStockThreshold: input.lowStockThreshold,
   });
+}
+
+/** SKUs in this organization that intersect `skus` (exact order not preserved). */
+export async function findExistingProductSkus(
+  organizationId: string,
+  skus: string[],
+): Promise<string[]> {
+  if (skus.length === 0) {
+    return [];
+  }
+  const rows = await productModel().findAll({
+    where: { organizationId, sku: { [Op.in]: skus } },
+    attributes: ["sku"],
+    raw: true,
+  });
+  return (rows as { sku: string }[]).map((r) => r.sku);
+}
+
+export async function bulkCreateProductsForOrganization(
+  organizationId: string,
+  inputs: CreateProductInput[],
+): Promise<number> {
+  const sequelize = getSequelize();
+  await sequelize.transaction(async (transaction) => {
+    for (const input of inputs) {
+      await productModel().create(
+        {
+          organizationId,
+          name: input.name,
+          sku: input.sku,
+          description: input.description,
+          quantityOnHand: input.quantityOnHand,
+          costPrice: input.costPrice,
+          sellingPrice: input.sellingPrice,
+          lowStockThreshold: input.lowStockThreshold,
+        },
+        { transaction },
+      );
+    }
+  });
+  return inputs.length;
 }
 
 export type UpdateProductOptions = {
