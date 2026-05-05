@@ -1,21 +1,24 @@
 import { randomUUID } from "crypto";
 import type { Sequelize } from "sequelize";
 import { DataTypes, Model, type Optional } from "sequelize";
+import { ADMIN_ROLE_ID } from "./role";
 
 export type UserAttrs = {
   id: string;
   email: string;
   passwordHash: string;
   organizationId: string;
+  roleId: number;
 };
 
-export type UserCreationAttrs = Optional<UserAttrs, "id">;
+export type UserCreationAttrs = Optional<UserAttrs, "id" | "roleId">;
 
 export class User extends Model<UserAttrs, UserCreationAttrs> {
   declare id: string;
   declare email: string;
   declare passwordHash: string;
   declare organizationId: string;
+  declare roleId: number;
 }
 
 export function initUserModel(sequelize: Sequelize): typeof User {
@@ -42,6 +45,15 @@ export function initUserModel(sequelize: Sequelize): typeof User {
         field: "organization_id",
         references: { model: "organizations", key: "id" },
         onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      },
+      roleId: {
+        type: DataTypes.TINYINT.UNSIGNED,
+        allowNull: false,
+        defaultValue: ADMIN_ROLE_ID,
+        field: "role_id",
+        references: { model: "roles", key: "id" },
+        onDelete: "RESTRICT",
         onUpdate: "CASCADE",
       },
     },

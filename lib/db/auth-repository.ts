@@ -1,5 +1,5 @@
 import { UniqueConstraintError } from "sequelize";
-import { Organization, User } from "./models";
+import { ADMIN_ROLE_ID, Organization, User } from "./models";
 import { getSequelize } from "./sequelize";
 
 export type UserWithOrg = {
@@ -74,6 +74,7 @@ export async function createOrganizationAndUser(input: {
           email,
           passwordHash: input.passwordHash,
           organizationId: org.id,
+          roleId: ADMIN_ROLE_ID,
         },
         { transaction },
       );

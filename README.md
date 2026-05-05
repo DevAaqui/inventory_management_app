@@ -33,13 +33,14 @@ See [.env.example](.env.example) for placeholders.
 
 ### 3. Database schema
 
-Create an empty database in MySQL, then apply the initial migration once:
+Create an empty database in MySQL, then apply migrations **in order**:
 
 ```bash
 mysql -u USER -p YOUR_DATABASE < db/migrations/001_init.sql
+mysql -u USER -p YOUR_DATABASE < db/migrations/002_roles.sql
 ```
 
-This creates `organizations` and `users` tables used by Sequelize (see `lib/db/models/`).
+This creates `organizations`, `roles` (seeded with `admin`), `users` (with `role_id`), per `lib/db/models/`.
 
 ### 4. Run the development server
 
