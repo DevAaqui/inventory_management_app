@@ -38,9 +38,27 @@ Create an empty database in MySQL, then apply migrations **in order**:
 ```bash
 mysql -u USER -p YOUR_DATABASE < db/migrations/001_init.sql
 mysql -u USER -p YOUR_DATABASE < db/migrations/002_roles.sql
+mysql -u USER -p YOUR_DATABASE < db/migrations/003_products.sql
 ```
 
-This creates `organizations`, `roles` (seeded with `admin`), `users` (with `role_id`), per `lib/db/models/`.
+If `products` already existed from an **older** `003` without timestamps, `CREATE TABLE IF NOT EXISTS` will **not** add new columns. Check with `DESCRIBE products;`, then run **only** the fix you need:
+
+```bash
+# Missing created_at only (ignore “Duplicate column” for the other):
+mysql -u USER -p YOUR_DATABASE < db/migrations/004_products_created_at.sql
+mysql -u USER -p YOUR_DATABASE < db/migrations/005_products_updated_at.sql
+```
+
+If `created_at` **already exists** but `updated_at` does not (error **Duplicate column 'created_at'** when running a combined `ALTER`), run **only**:
+
+```bash
+mysql -u USER -p YOUR_DATABASE < db/migrations/005_products_updated_at.sql
+```
+
+If a migration reports a duplicate column for the column it adds, skip that file.
+
+`001` / `002` create organizations, roles (with `admin`), and users.  
+`003` adds `products` with **`UNIQUE (organization_id, sku)`** so SKUs are unique per org and `WHERE organization_id = ?` can use that index’s leftmost prefix (no separate index on `organization_id` only).
 
 ### 4. Run the development server
 
