@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import {
   getOrganizationDefaultLowStock,
   listProductsByOrganization,
 } from "@/lib/db/product-repository";
 import { effectiveLowStockThreshold, isLowStock } from "@/lib/products/stock";
 import { getSession } from "@/lib/session";
+import { ProductsSavedToast } from "@/components/products/products-saved-toast";
 import {
   ProductsTableClient,
   type ProductRow,
@@ -46,6 +48,9 @@ export default async function ProductsPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8">
+      <Suspense fallback={null}>
+        <ProductsSavedToast />
+      </Suspense>
       <h1 className="mb-6 text-2xl font-semibold">Products</h1>
       <ProductsTableClient
         orgDefaultLowStock={orgDefault}

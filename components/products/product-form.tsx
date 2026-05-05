@@ -10,7 +10,13 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
-import { useActionState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 type Props = {
   mode: "create" | "edit";
@@ -31,17 +37,48 @@ type Props = {
 
 const initial: ProductActionState = {};
 
+function requiredFieldsValid(
+  name: string,
+  sku: string,
+  quantityOnHand: string,
+): boolean {
+  if (!name.trim() || !sku.trim()) return false;
+  const q = Number.parseInt(quantityOnHand.trim(), 10);
+  return Number.isFinite(q) && q >= 0;
+}
+
 export function ProductForm({ mode, defaultValues, formAction }: Props) {
   const [state, dispatch, pending] = useActionState(formAction, initial);
 
   const d = defaultValues;
+  const [name, setName] = useState(() => d?.name ?? "");
+  const [sku, setSku] = useState(() => d?.sku ?? "");
+  const [quantityOnHand, setQuantityOnHand] = useState(() =>
+    d?.quantityOnHand !== undefined ? String(d.quantityOnHand) : "0",
+  );
+
+  useEffect(() => {
+    setName(d?.name ?? "");
+    setSku(d?.sku ?? "");
+    setQuantityOnHand(
+      d?.quantityOnHand !== undefined ? String(d.quantityOnHand) : "0",
+    );
+  }, [d?.name, d?.sku, d?.quantityOnHand]);
+
+  const canSubmit = useMemo(
+    () => requiredFieldsValid(name, sku, quantityOnHand),
+    [name, sku, quantityOnHand],
+  );
 
   return (
     <Form
       className="flex max-w-xl flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault();
-        dispatch(new FormData(e.currentTarget));
+        const fd = new FormData(e.currentTarget);
+        startTransition(() => {
+          dispatch(fd);
+        });
       }}
     >
       {state.error ? (
@@ -53,7 +90,8 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
       <TextField
         isRequired
         name="name"
-        defaultValue={d?.name ?? ""}
+        value={name}
+        onChange={setName}
         validate={(v) => (v.trim().length > 0 ? null : "Name is required")}
       >
         <Label>Name</Label>
@@ -64,7 +102,8 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
       <TextField
         isRequired
         name="sku"
-        defaultValue={d?.sku ?? ""}
+        value={sku}
+        onChange={setSku}
         validate={(v) => (v.trim().length > 0 ? null : "SKU is required")}
       >
         <Label>SKU</Label>
@@ -85,7 +124,8 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
       <TextField
         isRequired
         name="quantityOnHand"
-        defaultValue={d?.quantityOnHand?.toString() ?? "0"}
+        value={quantityOnHand}
+        onChange={setQuantityOnHand}
         validate={(v) => {
           const n = Number.parseInt(v, 10);
           return Number.isFinite(n) && n >= 0
@@ -159,7 +199,11 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
       </TextField>
 
       <div className="flex gap-3 pt-2">
-        <Button isDisabled={pending} type="submit" variant="primary">
+        <Button
+          isDisabled={pending || !canSubmit}
+          type="submit"
+          variant="primary"
+        >
           {pending
             ? "Saving…"
             : mode === "create"

@@ -60,7 +60,7 @@ export async function createProductAction(
     throw e;
   }
 
-  redirect("/products");
+  redirect("/products?saved=created");
 }
 
 export async function updateProductAction(
@@ -93,7 +93,7 @@ export async function updateProductAction(
     throw e;
   }
 
-  redirect("/products");
+  redirect("/products?saved=updated");
 }
 
 export type DeleteProductResult = { ok: true } | { error: string };
