@@ -32,12 +32,18 @@ type Props = {
 const initial: ProductActionState = {};
 
 export function ProductForm({ mode, defaultValues, formAction }: Props) {
-  const [state, action, pending] = useActionState(formAction, initial);
+  const [state, dispatch, pending] = useActionState(formAction, initial);
 
   const d = defaultValues;
 
   return (
-    <Form className="flex max-w-xl flex-col gap-4" action={action}>
+    <Form
+      className="flex max-w-xl flex-col gap-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        dispatch(new FormData(e.currentTarget));
+      }}
+    >
       {state.error ? (
         <p className="text-danger text-sm font-medium" role="alert">
           {state.error}

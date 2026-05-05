@@ -5,10 +5,12 @@ import { UniqueConstraintError } from "sequelize";
 import { redirect } from "next/navigation";
 import { parseProductFormData } from "@/lib/products/parse-product-form";
 import {
+  adjustProductStock,
   createProductForOrganization,
   deleteProductForOrganization,
   updateProductForOrganization,
 } from "@/lib/db/product-repository";
+import { parseAdjustStockFormData } from "@/lib/products/parse-adjust-stock";
 import { getSession } from "@/lib/session";
 
 export type ProductActionState = { error?: string };
@@ -19,6 +21,22 @@ async function requireOrganizationId(): Promise<string> {
     redirect("/login");
   }
   return session.organizationId;
+}
+
+/** Logged-in org member with user id (required for stock audit). */
+async function requireAuthContext(): Promise<{
+  organizationId: string;
+  userId: string;
+}> {
+  const session = await getSession();
+  if (
+    !session.isLoggedIn ||
+    !session.organizationId ||
+    !session.userId
+  ) {
+    redirect("/login");
+  }
+  return { organizationId: session.organizationId, userId: session.userId };
 }
 
 export async function createProductAction(
@@ -50,7 +68,7 @@ export async function updateProductAction(
   _prev: ProductActionState,
   formData: FormData,
 ): Promise<ProductActionState> {
-  const organizationId = await requireOrganizationId();
+  const { organizationId, userId } = await requireAuthContext();
   const parsed = parseProductFormData(formData);
   if (!parsed.ok) {
     return { error: parsed.error };
@@ -61,6 +79,7 @@ export async function updateProductAction(
       organizationId,
       productId,
       parsed.data,
+      { userId },
     );
     if (!updated) {
       return { error: "Product not found" };
@@ -94,4 +113,42 @@ export async function deleteProductAction(
   }
   revalidatePath("/products");
   return { ok: true };
+}
+
+export type AdjustStockActionResult =
+  | { ok: true; quantityOnHand: number }
+  | { error: string };
+
+export async function adjustStockAction(
+  productId: string,
+  formData: FormData,
+): Promise<AdjustStockActionResult> {
+  const { organizationId, userId } = await requireAuthContext();
+
+  const parsed = parseAdjustStockFormData(formData);
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+
+  const result = await adjustProductStock(
+    organizationId,
+    productId,
+    parsed.delta,
+    parsed.note,
+    userId,
+  );
+
+  if (!result.ok) {
+    if (result.reason === "not_found") {
+      return { error: "Product not found" };
+    }
+    const q = result.quantityOnHand ?? 0;
+    return {
+      error: `Only ${q} on hand; this adjustment would go negative.`,
+    };
+  }
+
+  revalidatePath("/products");
+  revalidatePath(`/products/${productId}/edit`);
+  return { ok: true, quantityOnHand: result.quantityOnHand };
 }

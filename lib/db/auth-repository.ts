@@ -4,6 +4,12 @@ import { Organization } from "./models/organization";
 import { ADMIN_ROLE_ID } from "./models/role";
 import { User } from "./models/user";
 
+export async function getUserEmailById(userId: string): Promise<string | null> {
+  getSequelize();
+  const user = await User.findByPk(userId, { attributes: ["email"] });
+  return user?.email ?? null;
+}
+
 export type UserWithOrg = {
   userId: string;
   email: string;

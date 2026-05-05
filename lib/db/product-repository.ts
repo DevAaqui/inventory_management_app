@@ -12,6 +12,52 @@ function productModel(): ModelStatic<Product> {
   return getSequelize().model("Product") as ModelStatic<Product>;
 }
 
+/**
+ * Stock audit columns are written with raw SQL so updates survive a stale `Product` model on the
+ * Sequelize singleton (Next.js / Turbopack HMR can leave `initModels` from an older bundle, so
+ * Sequelize omits attributes it does not know about from `Model#update`).
+ */
+async function sqlStampProductStockAudit(params: {
+  productId: string;
+  organizationId: string;
+  userId: string;
+  note: string | null;
+  at: Date;
+}): Promise<void> {
+  const { productId, organizationId, userId, note, at } = params;
+  await getSequelize().query(
+    `UPDATE products
+     SET stock_updated_at = ?, stock_updated_by_user_id = ?, stock_update_note = ?, updated_at = ?
+     WHERE id = ? AND organization_id = ?`,
+    {
+      replacements: [at, userId, note, at, productId, organizationId],
+    },
+  );
+}
+
+async function sqlAdjustProductStockRow(params: {
+  productId: string;
+  organizationId: string;
+  nextQty: number;
+  userId: string;
+  note: string | null;
+  at: Date;
+}): Promise<number> {
+  const { productId, organizationId, nextQty, userId, note, at } = params;
+  const rows = await getSequelize().query(
+    `UPDATE products
+     SET quantity_on_hand = ?, stock_updated_at = ?, stock_updated_by_user_id = ?,
+         stock_update_note = ?, updated_at = ?
+     WHERE id = ? AND organization_id = ?`,
+    {
+      replacements: [nextQty, at, userId, note, at, productId, organizationId],
+    },
+  );
+  // `sequelize.query` defaults to RAW: MySQL driver returns OkPacket / ResultSetHeader as first tuple value.
+  const header = rows[0] as { affectedRows?: number } | undefined;
+  return header?.affectedRows ?? 0;
+}
+
 export async function getOrganizationDefaultLowStock(
   organizationId: string,
 ): Promise<number> {
@@ -68,15 +114,25 @@ export async function createProductForOrganization(
   });
 }
 
+export type UpdateProductOptions = {
+  /** When quantity on hand changes, audit columns are set if `userId` is set. */
+  userId?: string;
+};
+
 export async function updateProductForOrganization(
   organizationId: string,
   productId: string,
   input: UpdateProductInput,
+  options?: UpdateProductOptions,
 ): Promise<Product | null> {
   const product = await productModel().findOne({
     where: { id: productId, organizationId },
   });
   if (!product) return null;
+
+  const prevQty = product.quantityOnHand;
+  const qtyChanged = prevQty !== input.quantityOnHand;
+
   await product.update({
     name: input.name,
     sku: input.sku,
@@ -86,7 +142,57 @@ export async function updateProductForOrganization(
     sellingPrice: input.sellingPrice,
     lowStockThreshold: input.lowStockThreshold,
   });
+
+  if (qtyChanged && options?.userId) {
+    await sqlStampProductStockAudit({
+      productId,
+      organizationId,
+      userId: options.userId,
+      note: null,
+      at: new Date(),
+    });
+  }
+
   return product;
+}
+
+export type AdjustStockResult =
+  | { ok: true; quantityOnHand: number }
+  | { ok: false; reason: "not_found" | "insufficient"; quantityOnHand?: number };
+
+export async function adjustProductStock(
+  organizationId: string,
+  productId: string,
+  delta: number,
+  note: string | null,
+  userId: string,
+): Promise<AdjustStockResult> {
+  const product = await productModel().findOne({
+    where: { id: productId, organizationId },
+  });
+  if (!product) return { ok: false, reason: "not_found" };
+
+  const current = product.quantityOnHand;
+  const next = current + delta;
+  if (next < 0) {
+    return { ok: false, reason: "insufficient", quantityOnHand: current };
+  }
+
+  const now = new Date();
+  const affected = await sqlAdjustProductStockRow({
+    productId,
+    organizationId,
+    nextQty: next,
+    userId,
+    note,
+    at: now,
+  });
+
+  if (affected === 0) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  return { ok: true, quantityOnHand: next };
 }
 
 export async function deleteProductForOrganization(
