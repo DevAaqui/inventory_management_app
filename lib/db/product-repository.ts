@@ -67,6 +67,16 @@ export async function getOrganizationDefaultLowStock(
   return org?.defaultLowStockThreshold ?? 5;
 }
 
+export async function updateOrganizationDefaultLowStock(
+  organizationId: string,
+  defaultLowStockThreshold: number,
+): Promise<boolean> {
+  const org = await organizationModel().findByPk(organizationId);
+  if (!org) return false;
+  await org.update({ defaultLowStockThreshold });
+  return true;
+}
+
 export async function listProductsByOrganization(
   organizationId: string,
 ): Promise<Product[]> {

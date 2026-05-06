@@ -26,6 +26,9 @@ export default async function AuthenticatedLayout({
             <Link className="hover:text-foreground" href="/products">
               Products
             </Link>
+            <Link className="hover:text-foreground" href="/settings">
+              Settings
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm">
