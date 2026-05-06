@@ -1,6 +1,7 @@
 "use client";
 
 import { loginAction } from "@/app/actions/auth";
+import { PasswordField } from "@/components/auth/password-field";
 import { Button, FieldError, Form, Input, Label, TextField } from "@heroui/react";
 import Link from "next/link";
 import { useActionState } from "react";
@@ -38,18 +39,15 @@ export function LoginForm() {
           <Input placeholder="you@company.com" autoComplete="email" />
           <FieldError />
         </TextField>
-        <TextField
+        <PasswordField
+          autoComplete="current-password"
           isRequired
+          label="Password"
           name="password"
-          type="password"
           validate={(value) =>
             value.length >= 8 ? null : "At least 8 characters"
           }
-        >
-          <Label>Password</Label>
-          <Input placeholder="••••••••" autoComplete="current-password" />
-          <FieldError />
-        </TextField>
+        />
         <Button
           type="submit"
           className="w-full"

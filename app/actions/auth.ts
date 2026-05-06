@@ -13,18 +13,27 @@ import { getSession } from "@/lib/session";
 
 const BCRYPT_ROUNDS = 10;
 
-const signupSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Enter a valid email address")
-    .email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  organizationName: z
-    .string()
-    .trim()
-    .min(1, "Organization name is required")
-    .max(255, "Organization name is too long"),
-});
+const signupSchema = z
+  .object({
+    email: z
+      .string()
+      .min(1, "Enter a valid email address")
+      .email("Enter a valid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z
+      .string()
+      .min(1, "Confirm your password")
+      .min(8, "Password must be at least 8 characters"),
+    organizationName: z
+      .string()
+      .trim()
+      .min(1, "Organization name is required")
+      .max(255, "Organization name is too long"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 const loginSchema = z.object({
   email: z
@@ -50,6 +59,7 @@ export async function signupAction(
   const parsed = signupSchema.safeParse({
     email: String(formData.get("email") ?? ""),
     password: String(formData.get("password") ?? ""),
+    confirmPassword: String(formData.get("confirmPassword") ?? ""),
     organizationName: String(formData.get("organizationName") ?? ""),
   });
 
