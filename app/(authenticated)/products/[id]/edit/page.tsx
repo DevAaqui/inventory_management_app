@@ -4,6 +4,7 @@ import { getProductForOrganization } from "@/lib/db/product-repository";
 import { getSession } from "@/lib/session";
 import { AdjustStockForm } from "@/components/products/adjust-stock-form";
 import { ProductForm } from "@/components/products/product-form";
+import { Card } from "@heroui/react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -82,40 +83,46 @@ export default async function EditProductPage({
         mode="edit"
       />
 
-      <section className="border-default-200/90 bg-content1/70 shadow-md ring-black/[0.03] dark:bg-content1/45 dark:ring-white/[0.06] mt-10 rounded-2xl border p-6 ring-1 md:p-8">
-        <h2 className="mb-1 text-lg font-semibold tracking-tight">
-          Adjust stock
-        </h2>
-        <p className="text-foreground/60 mb-4 text-sm leading-relaxed">
-          Change quantity by a relative amount without editing the full form.
-          Who changed stock and when is recorded automatically.
-        </p>
-        {stockUpdatedLabel ? (
-          <div className="text-foreground/70 mb-4 space-y-1 text-sm">
-            <p>
-              Last stock change:{" "}
-              <span className="text-foreground">{stockUpdatedLabel}</span>
-              {stockUpdaterEmail ? (
-                <>
-                  {" "}
-                  by{" "}
-                  <span className="text-foreground">{stockUpdaterEmail}</span>
-                </>
-              ) : null}
-            </p>
-            {plain.stockUpdateNote ? (
+      <Card className="mt-10 shadow-xl shadow-black/[0.08] dark:shadow-black/[0.48]">
+        <Card.Header>
+          <Card.Title className="text-lg font-semibold tracking-tight">
+            Adjust stock
+          </Card.Title>
+          <Card.Description className="text-foreground/60 text-sm leading-relaxed">
+            Change quantity by a relative amount without editing the full form.
+            Who changed stock and when is recorded automatically.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content className="flex flex-col gap-4">
+          {stockUpdatedLabel ? (
+            <div className="text-foreground/70 space-y-1 text-sm">
               <p>
-                Note:{" "}
-                <span className="text-foreground">{plain.stockUpdateNote}</span>
+                Last stock change:{" "}
+                <span className="text-foreground">{stockUpdatedLabel}</span>
+                {stockUpdaterEmail ? (
+                  <>
+                    {" "}
+                    by{" "}
+                    <span className="text-foreground">{stockUpdaterEmail}</span>
+                  </>
+                ) : null}
               </p>
-            ) : null}
-          </div>
-        ) : null}
-        <AdjustStockForm
-          currentQuantityOnHand={plain.quantityOnHand}
-          productId={product.id}
-        />
-      </section>
+              {plain.stockUpdateNote ? (
+                <p>
+                  Note:{" "}
+                  <span className="text-foreground">
+                    {plain.stockUpdateNote}
+                  </span>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <AdjustStockForm
+            currentQuantityOnHand={plain.quantityOnHand}
+            productId={product.id}
+          />
+        </Card.Content>
+      </Card>
     </main>
   );
 }

@@ -5,7 +5,11 @@ import {
 } from "@/lib/db/product-repository";
 import { effectiveLowStockThreshold, isLowStock } from "@/lib/products/stock";
 import { getSession } from "@/lib/session";
+import { Card } from "@heroui/react";
 import { redirect } from "next/navigation";
+
+const dashboardCardElevation =
+  "shadow-xl shadow-black/[0.08] dark:shadow-black/[0.48]";
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -73,42 +77,48 @@ export default async function DashboardPage() {
         aria-label="Inventory summary"
         className="mt-8 grid gap-4 sm:grid-cols-2"
       >
-        <div className="border-default-200/90 bg-content1/70 hover:border-primary/25 shadow-sm ring-black/[0.03] transition-[box-shadow,border-color] hover:shadow-md dark:bg-content1/50 dark:ring-white/[0.05] rounded-xl border p-5 ring-1">
-          <p className="text-foreground/55 text-xs font-semibold uppercase tracking-wider">
-            Total products
-          </p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
-            {totalProducts}
-          </p>
-        </div>
-        <div className="border-default-200/90 bg-content1/70 hover:border-primary/25 shadow-sm ring-black/[0.03] transition-[box-shadow,border-color] hover:shadow-md dark:bg-content1/50 dark:ring-white/[0.05] rounded-xl border p-5 ring-1">
-          <p className="text-foreground/55 text-xs font-semibold uppercase tracking-wider">
-            Total quantity on hand
-          </p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
-            {totalQuantityOnHand}
-          </p>
-        </div>
+        <Card className={dashboardCardElevation}>
+          <Card.Content>
+            <p className="text-foreground/55 text-xs font-semibold uppercase tracking-wider">
+              Total products
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
+              {totalProducts}
+            </p>
+          </Card.Content>
+        </Card>
+        <Card className={dashboardCardElevation}>
+          <Card.Content>
+            <p className="text-foreground/55 text-xs font-semibold uppercase tracking-wider">
+              Total quantity on hand
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
+              {totalQuantityOnHand}
+            </p>
+          </Card.Content>
+        </Card>
       </section>
 
-      <section className="border-default-200/90 bg-content1/60 shadow-sm ring-black/[0.03] dark:bg-content1/40 dark:ring-white/[0.05] mt-10 overflow-hidden rounded-xl border ring-1">
-        <div className="border-default-200/80 bg-linear-to-r from-default-100/50 to-transparent px-5 py-4 dark:from-default-100/10 dark:to-transparent border-b">
-          <h2 className="text-lg font-semibold tracking-tight">
+      <Card className={`mt-10 ${dashboardCardElevation}`}>
+        <Card.Header>
+          <Card.Title className="text-lg font-semibold tracking-tight">
             Low stock items
-          </h2>
-          <p className="text-foreground/55 mt-1.5 max-w-3xl text-xs leading-relaxed">
+          </Card.Title>
+          <Card.Description className="text-foreground/55 mt-1.5 max-w-3xl text-xs leading-relaxed">
             Quantity on hand is at or below the effective low stock threshold
             (product value or organization default {orgDefaultLowStock}).
-          </p>
-        </div>
-        {lowStockRows.length === 0 ? (
-          <p className="text-foreground/65 px-5 py-10 text-center text-sm">
-            No low stock items right now.
-          </p>
-        ) : (
-          <LowStockTable rows={lowStockRows} />
-        )}
-      </section>
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          {lowStockRows.length === 0 ? (
+            <p className="text-foreground/65 py-6 text-center text-sm">
+              No low stock items right now.
+            </p>
+          ) : (
+            <LowStockTable rows={lowStockRows} />
+          )}
+        </Card.Content>
+      </Card>
     </main>
   );
 }
