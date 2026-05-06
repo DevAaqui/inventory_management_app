@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "StockFlow",
   description: "Inventory management for your organization",
+  icons: {
+    icon: "/stock_flow_browser_icon.png",
+    shortcut: "/stock_flow_browser_icon.png",
+    apple: "/stock_flow_browser_icon.png",
+  },
 };
 
 export default function RootLayout({
