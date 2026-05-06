@@ -2,6 +2,37 @@
 
 Next.js app with **MySQL**, **Sequelize**, **HeroUI**, and **Tailwind CSS v4**.
 
+## Features
+
+### Authentication & tenancy
+
+- **Sign up** — Creates an organization and the first user (password hashing via **bcryptjs**).
+- **Log in / Log out** — Credentials verified server-side; session stored with **iron-session**.
+- **Route protection** — Authenticated layout requires a logged-in user tied to an organization.
+
+### Dashboard
+
+- **Inventory summary** — Total products and total quantity on hand for the organization.
+- **Low stock** — Lists items whose quantity is at or below the effective threshold (per-product threshold or organization default).
+
+### Products
+
+- **Catalog table** — Name, SKU, quantity, low-stock status (with threshold hint), selling price, edit/delete actions.
+- **Server-side pagination** — Configurable page size (see `PRODUCTS_PAGE_SIZE` in `lib/products/products-list-query.ts`; default **10** rows per page).
+- **URL-driven filters** — Search by **name or SKU** (`q` query param); shareable/bookmarkable URLs.
+- **Server-side sorting** — Sort columns via URL (`sort`, `dir`); invalid pages redirect to a safe page index.
+- **CRUD** — Create and edit products (including optional description, pricing, low-stock threshold); delete with confirmation.
+- **Adjust stock** — On the edit screen, apply signed deltas with optional note; audit-friendly updates server-side.
+- **Bulk import** — Upload **`.xlsx`** workbooks (validated server-side); **Excel template** available from the products toolbar.
+
+### Settings
+
+- **Organization defaults** — Set the **default low stock threshold** used when a product has no per-product threshold (powers alerts and dashboard logic).
+
+### Data integrity
+
+- **SKU uniqueness** enforced per organization (`UNIQUE (organization_id, sku)` in the schema).
+
 ## Prerequisites
 
 - **Node.js** 20+ (matches Next.js 16)
@@ -80,7 +111,8 @@ npm run start
 - **App:** Next.js (App Router), React 19, TypeScript  
 - **UI:** HeroUI v3, Tailwind CSS v4  
 - **Data:** Sequelize + `mysql2`  
-- **Auth/session:** `iron-session` (when wired to UI); passwords hashed with `bcryptjs`
+- **Auth/session:** `iron-session` with cookie-backed sessions; passwords hashed with `bcryptjs`  
+- **Validation:** Client-side field validation on forms (HeroUI **TextField**), plus server-side checks (**Zod** on auth/settings; parsers/actions on products)
 
 ## Learn more
 
