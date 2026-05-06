@@ -72,7 +72,7 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
   );
 
   return (
-    <Card className="max-w-xl shadow-xl shadow-black/[0.08] dark:shadow-black/[0.48]">
+    <Card className="w-full shadow-xl shadow-black/[0.08] dark:shadow-black/[0.48]">
       <Card.Content>
         <Form
           className="flex flex-col gap-4"
@@ -90,29 +90,124 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
             </p>
           ) : null}
 
-          <TextField
-            isRequired
-            name="name"
-            value={name}
-            onChange={setName}
-            validate={(v) => (v.trim().length > 0 ? null : "Name is required")}
-          >
-            <Label>Name</Label>
-            <Input placeholder="Product name" />
-            <FieldError />
-          </TextField>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              className="min-w-0"
+              isRequired
+              name="name"
+              value={name}
+              onChange={setName}
+              validate={(v) =>
+                v.trim().length > 0 ? null : "Name is required"
+              }
+            >
+              <Label>Name</Label>
+              <Input placeholder="Product name" />
+              <FieldError />
+            </TextField>
 
-          <TextField
-            isRequired
-            name="sku"
-            value={sku}
-            onChange={setSku}
-            validate={(v) => (v.trim().length > 0 ? null : "SKU is required")}
-          >
-            <Label>SKU</Label>
-            <Input placeholder="SKU-001" />
-            <FieldError />
-          </TextField>
+            <TextField
+              className="min-w-0"
+              isRequired
+              name="sku"
+              value={sku}
+              onChange={setSku}
+              validate={(v) =>
+                v.trim().length > 0 ? null : "SKU is required"
+              }
+            >
+              <Label>SKU</Label>
+              <Input placeholder="SKU-001" />
+              <FieldError />
+            </TextField>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              className="min-w-0"
+              isRequired
+              name="quantityOnHand"
+              value={quantityOnHand}
+              onChange={setQuantityOnHand}
+              validate={(v) => {
+                const n = Number.parseInt(v, 10);
+                return Number.isFinite(n) && n >= 0
+                  ? null
+                  : "Non-negative whole number";
+              }}
+            >
+              <Label>Quantity on hand</Label>
+              <Input inputMode="numeric" placeholder="0" />
+              <FieldError />
+            </TextField>
+
+            <TextField
+              className="min-w-0"
+              name="costPrice"
+              defaultValue={
+                d?.costPrice != null ? String(d.costPrice) : ""
+              }
+              validate={(v) => {
+                const t = v.trim();
+                if (!t) return null;
+                const n = Number(t);
+                return Number.isFinite(n) && n >= 0
+                  ? null
+                  : "Non-negative number";
+              }}
+            >
+              <Label>Cost price (optional)</Label>
+              <Input inputMode="decimal" placeholder="0.00" />
+              <FieldError />
+            </TextField>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              className="min-w-0"
+              name="sellingPrice"
+              defaultValue={
+                d?.sellingPrice != null ? String(d.sellingPrice) : ""
+              }
+              validate={(v) => {
+                const t = v.trim();
+                if (!t) return null;
+                const n = Number(t);
+                return Number.isFinite(n) && n >= 0
+                  ? null
+                  : "Non-negative number";
+              }}
+            >
+              <Label>Selling price (optional)</Label>
+              <Input inputMode="decimal" placeholder="0.00" />
+              <FieldError />
+            </TextField>
+
+            <TextField
+              className="min-w-0"
+              name="lowStockThreshold"
+              defaultValue={
+                d?.lowStockThreshold != null
+                  ? String(d.lowStockThreshold)
+                  : ""
+              }
+              validate={(v) => {
+                const t = v.trim();
+                if (!t) return null;
+                const n = Number.parseInt(t, 10);
+                return Number.isFinite(n) && n >= 0
+                  ? null
+                  : "Non-negative whole number";
+              }}
+            >
+              <Label>Low stock threshold (optional)</Label>
+              <Input
+                inputMode="numeric"
+                placeholder="Uses organization default if empty"
+              />
+              <FieldError />
+            </TextField>
+          </div>
 
           <div className="flex flex-col gap-2">
             <Label>Description (optional)</Label>
@@ -123,83 +218,6 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
               placeholder="Optional details"
             />
           </div>
-
-          <TextField
-            isRequired
-            name="quantityOnHand"
-            value={quantityOnHand}
-            onChange={setQuantityOnHand}
-            validate={(v) => {
-              const n = Number.parseInt(v, 10);
-              return Number.isFinite(n) && n >= 0
-                ? null
-                : "Non-negative whole number";
-            }}
-          >
-            <Label>Quantity on hand</Label>
-            <Input inputMode="numeric" placeholder="0" />
-            <FieldError />
-          </TextField>
-
-          <TextField
-            name="costPrice"
-            defaultValue={
-              d?.costPrice != null ? String(d.costPrice) : ""
-            }
-            validate={(v) => {
-              const t = v.trim();
-              if (!t) return null;
-              const n = Number(t);
-              return Number.isFinite(n) && n >= 0
-                ? null
-                : "Non-negative number";
-            }}
-          >
-            <Label>Cost price (optional)</Label>
-            <Input inputMode="decimal" placeholder="0.00" />
-            <FieldError />
-          </TextField>
-
-          <TextField
-            name="sellingPrice"
-            defaultValue={
-              d?.sellingPrice != null ? String(d.sellingPrice) : ""
-            }
-            validate={(v) => {
-              const t = v.trim();
-              if (!t) return null;
-              const n = Number(t);
-              return Number.isFinite(n) && n >= 0
-                ? null
-                : "Non-negative number";
-            }}
-          >
-            <Label>Selling price (optional)</Label>
-            <Input inputMode="decimal" placeholder="0.00" />
-            <FieldError />
-          </TextField>
-
-          <TextField
-            name="lowStockThreshold"
-            defaultValue={
-              d?.lowStockThreshold != null ? String(d.lowStockThreshold) : ""
-            }
-            validate={(v) => {
-              const t = v.trim();
-              if (!t) return null;
-              const n = Number.parseInt(t, 10);
-              return Number.isFinite(n) && n >= 0
-                ? null
-                : "Non-negative whole number";
-            }}
-          >
-            <Label>Low stock threshold (optional)</Label>
-            <Input
-              inputMode="numeric"
-              placeholder="Uses organization default if empty"
-            />
-            <FieldError />
-          </TextField>
 
           <div className="flex gap-3 pt-2">
             <Button
