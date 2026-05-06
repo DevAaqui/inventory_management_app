@@ -1,6 +1,7 @@
 import { logoutAction } from "@/app/actions/auth";
 import { getSession } from "@/lib/session";
 import { Button } from "@heroui/react";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -16,9 +17,22 @@ export default async function AuthenticatedLayout({
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-default-200 flex flex-wrap items-center justify-between gap-4 border-b px-4 py-3">
-        <div className="flex flex-wrap items-center gap-6">
-          <span className="font-semibold">StockFlow</span>
+      <header className="border-default-200 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2">
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="relative h-8 w-[min(200px,68vw)] shrink-0 sm:h-9 sm:w-[min(220px,42vw)]"
+            aria-label="StockFlow — Home"
+          >
+            <Image
+              src="/stock_flow1.png"
+              alt=""
+              fill
+              className="object-contain object-left"
+              sizes="(max-width: 640px) 68vw, 220px"
+              priority
+            />
+          </Link>
           <nav className="text-foreground/80 flex gap-4 text-sm font-medium">
             <Link className="hover:text-foreground" href="/dashboard">
               Dashboard
