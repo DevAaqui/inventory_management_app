@@ -3,7 +3,7 @@
 import { deleteProductAction } from "@/app/actions/products";
 import { BulkUploadProductsButton } from "@/components/products/bulk-upload-products";
 import type { SortDescriptor } from "@heroui/react";
-import { AlertDialog, Button, Input, Table, cn, toast } from "@heroui/react";
+import { AlertDialog, Button, Input, Table, buttonVariants, cn, toast } from "@heroui/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -187,7 +187,10 @@ export function ProductsTableClient({
         <div className="flex flex-wrap items-center gap-2">
           <BulkUploadProductsButton />
           <Link
-            className="bg-foreground text-background hover:opacity-90 inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold"
+            className={cn(
+              buttonVariants({ variant: "primary", size: "md" }),
+              "no-underline",
+            )}
             href="/products/new"
           >
             Add product
@@ -195,12 +198,12 @@ export function ProductsTableClient({
         </div>
       </div>
 
-      <p className="text-foreground/60 text-xs">
+      <p className="text-foreground/55 text-xs leading-relaxed">
         Organization low-stock default when product threshold is empty:{" "}
         {orgDefaultLowStock}
       </p>
 
-      <div className="border-default-200 dark:border-default-100 overflow-x-auto rounded-lg border">
+      <div className="border-default-200/90 dark:border-default-100 shadow-sm ring-black/[0.03] dark:ring-white/[0.05] overflow-x-auto rounded-xl border ring-1">
         <Table>
           <Table.ScrollContainer>
             <Table.Content

@@ -11,10 +11,10 @@ export function SignupForm() {
   const [state, formAction, pending] = useActionState(signupAction, initial);
 
   return (
-    <div className="border-default-200 dark:border-default-100 bg-content1 flex w-full max-w-md flex-col gap-6 rounded-xl border p-8 shadow-sm">
+    <div className="border-default-200/90 bg-content1/95 dark:border-default-100 relative flex w-full max-w-md flex-col gap-6 rounded-2xl border p-8 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.18)] ring-1 ring-black/[0.04] backdrop-blur-md dark:bg-content1/90 dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.55)] dark:ring-white/[0.06]">
       <div>
-        <h1 className="text-2xl font-semibold">Create account</h1>
-        <p className="text-foreground/60 mt-1 text-sm">
+        <h1 className="text-2xl font-semibold tracking-tight">Create account</h1>
+        <p className="text-foreground/60 mt-2 text-sm leading-relaxed">
           Set up your organization and sign up
         </p>
       </div>
@@ -73,7 +73,10 @@ export function SignupForm() {
       </Form>
       <p className="text-foreground/60 text-center text-sm">
         Already have an account?{" "}
-        <Link className="text-primary font-medium underline" href="/login">
+        <Link
+          className="text-primary font-semibold underline-offset-4 hover:underline focus-visible:ring-primary/40 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          href="/login"
+        >
           Log in
         </Link>
       </p>

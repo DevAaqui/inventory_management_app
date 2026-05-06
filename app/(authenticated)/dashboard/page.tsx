@@ -61,10 +61,10 @@ export default async function DashboardPage() {
   lowStockRows.sort((a, b) => a.quantityOnHand - b.quantityOnHand);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 md:py-12">
+      <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
       {session.email ? (
-        <p className="text-foreground/60 mt-1 text-sm">
+        <p className="text-foreground/55 mt-2 text-sm leading-relaxed">
           Signed in as {session.email}
         </p>
       ) : null}
@@ -73,34 +73,36 @@ export default async function DashboardPage() {
         aria-label="Inventory summary"
         className="mt-8 grid gap-4 sm:grid-cols-2"
       >
-        <div className="border-default-200 rounded-lg border p-4">
-          <p className="text-foreground/60 text-sm font-medium">
+        <div className="border-default-200/90 bg-content1/70 hover:border-primary/25 shadow-sm ring-black/[0.03] transition-[box-shadow,border-color] hover:shadow-md dark:bg-content1/50 dark:ring-white/[0.05] rounded-xl border p-5 ring-1">
+          <p className="text-foreground/55 text-xs font-semibold uppercase tracking-wider">
             Total products
           </p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums">
+          <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
             {totalProducts}
           </p>
         </div>
-        <div className="border-default-200 rounded-lg border p-4">
-          <p className="text-foreground/60 text-sm font-medium">
+        <div className="border-default-200/90 bg-content1/70 hover:border-primary/25 shadow-sm ring-black/[0.03] transition-[box-shadow,border-color] hover:shadow-md dark:bg-content1/50 dark:ring-white/[0.05] rounded-xl border p-5 ring-1">
+          <p className="text-foreground/55 text-xs font-semibold uppercase tracking-wider">
             Total quantity on hand
           </p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums">
+          <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
             {totalQuantityOnHand}
           </p>
         </div>
       </section>
 
-      <section className="border-default-200 mt-10 rounded-lg border">
-        <div className="border-default-200 border-b px-4 py-3">
-          <h2 className="text-lg font-semibold">Low stock items</h2>
-          <p className="text-foreground/60 mt-0.5 text-xs">
+      <section className="border-default-200/90 bg-content1/60 shadow-sm ring-black/[0.03] dark:bg-content1/40 dark:ring-white/[0.05] mt-10 overflow-hidden rounded-xl border ring-1">
+        <div className="border-default-200/80 bg-linear-to-r from-default-100/50 to-transparent px-5 py-4 dark:from-default-100/10 dark:to-transparent border-b">
+          <h2 className="text-lg font-semibold tracking-tight">
+            Low stock items
+          </h2>
+          <p className="text-foreground/55 mt-1.5 max-w-3xl text-xs leading-relaxed">
             Quantity on hand is at or below the effective low stock threshold
             (product value or organization default {orgDefaultLowStock}).
           </p>
         </div>
         {lowStockRows.length === 0 ? (
-          <p className="text-foreground/70 px-4 py-6 text-sm">
+          <p className="text-foreground/65 px-5 py-10 text-center text-sm">
             No low stock items right now.
           </p>
         ) : (

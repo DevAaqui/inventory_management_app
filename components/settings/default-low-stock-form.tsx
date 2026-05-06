@@ -35,9 +35,11 @@ export function DefaultLowStockForm({ initialDefaultLowStock }: Props) {
   }, [state.success, router]);
 
   return (
-    <div className="border-default-200 dark:border-default-100 bg-content1 max-w-md rounded-xl border p-6 shadow-sm">
-      <h2 className="text-lg font-semibold">Inventory defaults</h2>
-      <p className="text-foreground/60 mt-1 text-sm">
+    <div className="border-default-200/90 bg-content1/80 dark:border-default-100 max-w-md rounded-2xl border p-6 shadow-md ring-1 ring-black/[0.03] backdrop-blur-sm dark:bg-content1/60 dark:ring-white/[0.06]">
+      <h2 className="text-lg font-semibold tracking-tight">
+        Inventory defaults
+      </h2>
+      <p className="text-foreground/55 mt-2 text-sm leading-relaxed">
         When a product has no low stock threshold, this value is used for low
         stock alerts and the dashboard.
       </p>

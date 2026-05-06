@@ -57,7 +57,9 @@ export default async function AuthenticatedLayout({
           </Link>
         </nav>
       </header>
-      {children}
+      <div className="from-primary/[0.045] dark:from-primary/[0.07] relative flex min-h-0 flex-1 flex-col bg-linear-to-b via-background to-background">
+        {children}
+      </div>
     </div>
   );
 }

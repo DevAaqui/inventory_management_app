@@ -67,7 +67,7 @@ export function UserAccountMenu({
     <Dropdown>
       <Dropdown.Trigger
         aria-label="Account menu"
-        className="border-default-200 text-foreground/80 hover:text-foreground hover:bg-default-100 data-[pressed]:bg-default-100 inline-flex h-9 max-w-[min(260px,50vw)] shrink-0 items-center gap-2 rounded-lg border bg-transparent pl-2 pr-3 text-sm font-medium outline-none transition-colors"
+        className="border-default-200/90 bg-background/75 text-foreground/85 hover:text-foreground hover:bg-default-100/90 hover:border-default-300/80 data-[pressed]:bg-default-100 shadow-sm ring-black/[0.03] inline-flex h-9 max-w-[min(260px,50vw)] shrink-0 items-center gap-2 rounded-xl border pl-2 pr-3 text-sm font-medium outline-none ring-1 transition-[background-color,border-color,box-shadow,color] dark:bg-background/40 dark:ring-white/[0.06]"
       >
         <Avatar size="sm" className="shrink-0">
           <Avatar.Fallback className="text-[0.65rem] font-bold">

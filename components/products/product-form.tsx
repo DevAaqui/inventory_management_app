@@ -71,9 +71,10 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
   );
 
   return (
-    <Form
-      className="flex max-w-xl flex-col gap-4"
-      onSubmit={(e) => {
+    <div className="border-default-200/90 bg-content1/75 dark:border-default-100 max-w-xl rounded-2xl border p-6 shadow-md ring-1 ring-black/[0.03] backdrop-blur-sm md:p-8 dark:bg-content1/55 dark:ring-white/[0.06]">
+      <Form
+        className="flex flex-col gap-4"
+        onSubmit={(e) => {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         startTransition(() => {
@@ -212,5 +213,6 @@ export function ProductForm({ mode, defaultValues, formAction }: Props) {
         </Button>
       </div>
     </Form>
+    </div>
   );
 }

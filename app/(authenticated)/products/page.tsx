@@ -47,11 +47,14 @@ export default async function ProductsPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8">
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 md:py-12">
       <Suspense fallback={null}>
         <ProductsSavedToast />
       </Suspense>
-      <h1 className="mb-6 text-2xl font-semibold">Products</h1>
+      <h1 className="mb-2 text-3xl font-semibold tracking-tight">Products</h1>
+      <p className="text-foreground/55 mb-8 text-sm leading-relaxed">
+        Manage catalog, quantities, and low-stock alerts for your organization.
+      </p>
       <ProductsTableClient
         orgDefaultLowStock={orgDefault}
         products={rows}

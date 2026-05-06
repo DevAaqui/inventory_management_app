@@ -52,15 +52,20 @@ export default async function EditProductPage({
       : null;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8">
-      <div className="mb-6">
+    <main className="mx-auto w-full max-w-3xl px-4 py-10 md:py-12">
+      <div className="mb-8">
         <Link
-          className="text-primary text-sm font-medium underline"
+          className="text-foreground/70 hover:text-foreground hover:bg-default-100/90 -ml-2 inline-flex items-center rounded-lg px-2 py-1.5 text-sm font-medium transition-colors"
           href="/products"
         >
           ← Back to products
         </Link>
-        <h1 className="mt-3 text-2xl font-semibold">Edit product</h1>
+        <h1 className="mt-5 text-3xl font-semibold tracking-tight">
+          Edit product
+        </h1>
+        <p className="text-foreground/55 mt-2 text-sm leading-relaxed">
+          Update details or adjust stock without leaving this page.
+        </p>
       </div>
       <ProductForm
         key={formKey}
@@ -77,9 +82,11 @@ export default async function EditProductPage({
         mode="edit"
       />
 
-      <section className="border-default-200 mt-10 border-t pt-8">
-        <h2 className="mb-1 text-lg font-semibold">Adjust stock</h2>
-        <p className="text-foreground/65 mb-4 text-sm">
+      <section className="border-default-200/90 bg-content1/70 shadow-md ring-black/[0.03] dark:bg-content1/45 dark:ring-white/[0.06] mt-10 rounded-2xl border p-6 ring-1 md:p-8">
+        <h2 className="mb-1 text-lg font-semibold tracking-tight">
+          Adjust stock
+        </h2>
+        <p className="text-foreground/60 mb-4 text-sm leading-relaxed">
           Change quantity by a relative amount without editing the full form.
           Who changed stock and when is recorded automatically.
         </p>
