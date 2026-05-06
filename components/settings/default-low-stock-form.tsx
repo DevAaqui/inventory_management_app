@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  type SettingsActionState,
   updateDefaultLowStockAction,
 } from "@/app/actions/settings";
 import {
@@ -12,28 +11,18 @@ import {
   Input,
   Label,
   TextField,
+  toast,
 } from "@heroui/react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useState } from "react";
 
 type Props = {
   initialDefaultLowStock: number;
 };
 
-const initial: SettingsActionState = {};
-
 export function DefaultLowStockForm({ initialDefaultLowStock }: Props) {
   const router = useRouter();
-  const [state, formAction, pending] = useActionState(
-    updateDefaultLowStockAction,
-    initial,
-  );
-
-  useEffect(() => {
-    if (state.success) {
-      router.refresh();
-    }
-  }, [state.success, router]);
+  const [pending, setPending] = useState(false);
 
   return (
     <Card className="max-w-md shadow-xl shadow-black/[0.08] dark:shadow-black/[0.48]">
@@ -47,17 +36,32 @@ export function DefaultLowStockForm({ initialDefaultLowStock }: Props) {
         </Card.Description>
       </Card.Header>
       <Card.Content>
-        <Form className="flex flex-col gap-4" action={formAction}>
-          {state.error ? (
-            <p className="text-danger text-sm font-medium" role="alert">
-              {state.error}
-            </p>
-          ) : null}
-          {state.success ? (
-            <p className="text-success text-sm font-medium" role="status">
-              Settings saved.
-            </p>
-          ) : null}
+        <Form
+          className="flex flex-col gap-4"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            setPending(true);
+            try {
+              const next = await updateDefaultLowStockAction(fd);
+              if (next.error) {
+                toast.danger("Could not save settings", {
+                  description: next.error,
+                });
+                return;
+              }
+              if (next.success) {
+                toast.success("Settings saved", {
+                  description:
+                    "Default low stock threshold updated for your organization.",
+                });
+                router.refresh();
+              }
+            } finally {
+              setPending(false);
+            }
+          }}
+        >
           <TextField
             defaultValue={String(initialDefaultLowStock)}
             isRequired

@@ -23,7 +23,6 @@ function firstZodMessage(err: z.ZodError): string {
 }
 
 export async function updateDefaultLowStockAction(
-  _prev: SettingsActionState,
   formData: FormData,
 ): Promise<SettingsActionState> {
   const session = await getSession();
