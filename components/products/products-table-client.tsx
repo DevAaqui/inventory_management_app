@@ -3,7 +3,16 @@
 import { deleteProductAction } from "@/app/actions/products";
 import { BulkUploadProductsButton } from "@/components/products/bulk-upload-products";
 import type { SortDescriptor } from "@heroui/react";
-import { AlertDialog, Button, Input, Table, buttonVariants, cn, toast } from "@heroui/react";
+import {
+  AlertDialog,
+  Button,
+  Input,
+  Table,
+  buttonVariants,
+  cn,
+  inputVariants,
+  toast,
+} from "@heroui/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -43,6 +52,23 @@ function DeleteProductIcon({ className }: { className?: string }) {
       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
       <line x1="10" x2="10" y1="11" y2="17" />
       <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  );
+}
+
+function PlusIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 5v14M5 12h14" />
     </svg>
   );
 }
@@ -175,25 +201,30 @@ export function ProductsTableClient({
       : "No matches for this search.";
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <Input
           aria-label="Filter by name or SKU"
-          className="max-w-sm"
+          className={cn(
+            inputVariants({ variant: "primary" }),
+            "border-default-200/90 h-10 min-h-10 max-w-full shrink rounded-3xl px-4 text-sm shadow-none placeholder:text-foreground/45 sm:max-w-sm md:h-9 md:min-h-9",
+          )}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search name or SKU…"
           value={q}
         />
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <BulkUploadProductsButton />
           <Link
+            aria-label="Add product"
             className={cn(
               buttonVariants({ variant: "primary", size: "md" }),
-              "no-underline",
+              "no-underline shrink-0",
             )}
             href="/products/new"
           >
-            Add product
+            <PlusIcon className="size-4 shrink-0" />
+            Add
           </Link>
         </div>
       </div>
@@ -272,7 +303,14 @@ export function ProductsTableClient({
                     <Table.Cell className="text-right">
                       <div className="flex flex-wrap items-center justify-end gap-1">
                         <Link
-                          className="text-primary hover:bg-content2/80 inline-flex size-8 items-center justify-center rounded-md"
+                          className={cn(
+                            buttonVariants({
+                              variant: "ghost",
+                              size: "sm",
+                              isIconOnly: true,
+                            }),
+                            "no-underline text-foreground/65 hover:text-primary",
+                          )}
                           href={`/products/${p.id}/edit`}
                           aria-label={`Edit ${p.name}`}
                         >
@@ -337,13 +375,15 @@ export function DeleteProductButton({
     <AlertDialog isOpen={dialogOpen} onOpenChange={setDialogOpen}>
       <Button
         type="button"
-        variant="tertiary"
+        variant="ghost"
+        size="sm"
+        isIconOnly
         aria-label={
           productName
             ? `Delete product ${productName}`
             : "Delete product"
         }
-        className="text-danger hover:text-danger hover:bg-danger/10 inline-flex size-8 min-h-0 min-w-0 items-center justify-center rounded-md p-0"
+        className="text-danger hover:bg-danger/10 hover:text-danger data-[pressed]:bg-danger/15"
       >
         <DeleteProductIcon className="size-4 shrink-0" />
       </Button>

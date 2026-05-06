@@ -1,11 +1,9 @@
+import { MainNav } from "@/components/layout/main-nav";
 import { UserAccountMenu } from "@/components/layout/user-account-menu";
 import { getSession } from "@/lib/session";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-
-const navLinkClass =
-  "text-foreground/75 hover:text-foreground shrink-0 rounded-full px-3.5 py-2 text-sm font-semibold tracking-tight outline-none transition-[color,background-color,transform] duration-200 hover:bg-default-200/55 active:scale-[0.98] focus-visible:ring-default-400 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:px-4";
 
 export default async function AuthenticatedLayout({
   children,
@@ -46,15 +44,7 @@ export default async function AuthenticatedLayout({
           aria-label="Main navigation"
           className="text-foreground/80 -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-0.5 [scrollbar-width:none] md:order-2 md:mx-0 md:min-w-0 md:flex-1 md:justify-center md:gap-1 md:overflow-visible md:rounded-full md:bg-default-100/65 md:p-1 md:shadow-inner dark:md:bg-default-50/15 lg:justify-start [&::-webkit-scrollbar]:hidden"
         >
-          <Link className={navLinkClass} href="/dashboard">
-            Dashboard
-          </Link>
-          <Link className={navLinkClass} href="/products">
-            Products
-          </Link>
-          <Link className={navLinkClass} href="/settings">
-            Settings
-          </Link>
+          <MainNav />
         </nav>
       </header>
       <div className="from-primary/[0.045] dark:from-primary/[0.07] relative flex min-h-0 flex-1 flex-col bg-linear-to-b via-background to-background">
