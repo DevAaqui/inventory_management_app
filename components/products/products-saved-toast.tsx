@@ -27,7 +27,10 @@ export function ProductsSavedToast() {
     toast.success(title, {
       description: "Your changes have been saved.",
     });
-    router.replace(pathname);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("saved");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
   }, [searchParams, router, pathname]);
 
   return null;

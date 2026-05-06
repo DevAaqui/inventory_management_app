@@ -1,5 +1,6 @@
-import { literal, Op, type ModelStatic } from "sequelize";
+import { literal, Op, type ModelStatic, type OrderItem, type WhereOptions } from "sequelize";
 import { getSequelize } from "./sequelize";
+import type { ProductSortColumn } from "@/lib/products/products-list-query";
 import type { Organization } from "./models/organization";
 import type { Product } from "./models/product";
 
@@ -85,6 +86,89 @@ export async function listProductsByOrganization(
     // Unqualified column avoids bad SQL when Sequelize aliases the table (e.g. subqueries).
     order: literal("`updated_at` DESC"),
   });
+}
+
+/** Paginated listing with optional name/SKU search and sort (for `/products`). */
+export async function listProductsByOrganizationPaginated(params: {
+  organizationId: string;
+  orgDefaultLowStock: number;
+  limit: number;
+  offset: number;
+  search: string;
+  sortColumn: ProductSortColumn;
+  sortDescending: boolean;
+}): Promise<{ rows: Product[]; total: number }> {
+  const {
+    organizationId,
+    orgDefaultLowStock,
+    limit,
+    offset,
+    search,
+    sortColumn,
+    sortDescending,
+  } = params;
+
+  const where: WhereOptions<Product> = { organizationId };
+  const term = search
+    .trim()
+    .replace(/\\/g, "")
+    .replace(/%/g, "")
+    .replace(/_/g, "")
+    .slice(0, 200);
+  if (term.length > 0) {
+    Object.assign(where, {
+      [Op.or]: [
+        { name: { [Op.like]: `%${term}%` } },
+        { sku: { [Op.like]: `%${term}%` } },
+      ],
+    });
+  }
+
+  const dir = sortDescending ? "DESC" : "ASC";
+  const thr = Number.isFinite(orgDefaultLowStock)
+    ? Math.min(Math.max(0, Math.floor(orgDefaultLowStock)), 2_147_483_647)
+    : 5;
+
+  let primaryOrder: OrderItem[];
+
+  switch (sortColumn) {
+    case "name":
+      primaryOrder = [["name", dir]];
+      break;
+    case "sku":
+      primaryOrder = [["sku", dir]];
+      break;
+    case "quantityOnHand":
+      primaryOrder = [["quantityOnHand", dir]];
+      break;
+    case "sellingPrice":
+      primaryOrder = [
+        [literal("(selling_price IS NULL)"), "ASC"],
+        ["sellingPrice", dir],
+      ];
+      break;
+    case "isLowStock":
+      primaryOrder = [
+        [
+          literal(
+            `(quantity_on_hand <= COALESCE(low_stock_threshold, ${thr}))`,
+          ),
+          dir,
+        ],
+      ];
+      break;
+    default:
+      primaryOrder = [["name", "ASC"]];
+  }
+
+  const { rows, count } = await productModel().findAndCountAll({
+    where,
+    limit,
+    offset,
+    order: [...primaryOrder, ["id", "ASC"]],
+  });
+
+  return { rows, total: count };
 }
 
 export async function getProductForOrganization(

@@ -1,9 +1,14 @@
 import { Suspense } from "react";
 import {
   getOrganizationDefaultLowStock,
-  listProductsByOrganization,
+  listProductsByOrganizationPaginated,
 } from "@/lib/db/product-repository";
 import { effectiveLowStockThreshold, isLowStock } from "@/lib/products/stock";
+import {
+  PRODUCTS_PAGE_SIZE,
+  parseProductsListQuery,
+  productsListHref,
+} from "@/lib/products/products-list-query";
 import { getSession } from "@/lib/session";
 import { ProductsSavedToast } from "@/components/products/products-saved-toast";
 import {
@@ -12,15 +17,38 @@ import {
 } from "@/components/products/products-table-client";
 import { redirect } from "next/navigation";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session.organizationId) redirect("/login");
 
   const orgId = session.organizationId;
-  const [products, orgDefault] = await Promise.all([
-    listProductsByOrganization(orgId),
-    getOrganizationDefaultLowStock(orgId),
-  ]);
+  const raw = await searchParams;
+  const parsed = parseProductsListQuery(raw);
+
+  const orgDefault = await getOrganizationDefaultLowStock(orgId);
+
+  const firstBatch = await listProductsByOrganizationPaginated({
+    organizationId: orgId,
+    orgDefaultLowStock: orgDefault,
+    limit: PRODUCTS_PAGE_SIZE,
+    offset: (parsed.page - 1) * PRODUCTS_PAGE_SIZE,
+    search: parsed.q,
+    sortColumn: parsed.sortColumn,
+    sortDescending: parsed.sortDescending,
+  });
+
+  const { total, rows: products } = firstBatch;
+  const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PAGE_SIZE));
+  const page =
+    total === 0 ? 1 : Math.min(Math.max(1, parsed.page), totalPages);
+
+  if (parsed.page !== page) {
+    redirect(productsListHref({ ...parsed, page }));
+  }
 
   const rows: ProductRow[] = products.map((p) => {
     const plain = p.get({ plain: true }) as {
@@ -56,8 +84,15 @@ export default async function ProductsPage() {
         Manage catalog, quantities, and low-stock alerts for your organization.
       </p>
       <ProductsTableClient
+        key={`${parsed.q}|${page}|${parsed.sortColumn}|${String(parsed.sortDescending)}`}
         orgDefaultLowStock={orgDefault}
+        page={page}
+        pageSize={PRODUCTS_PAGE_SIZE}
         products={rows}
+        q={parsed.q}
+        sortColumn={parsed.sortColumn}
+        sortDescending={parsed.sortDescending}
+        totalCount={total}
       />
     </main>
   );

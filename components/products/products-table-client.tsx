@@ -13,10 +13,14 @@ import {
   inputVariants,
   toast,
 } from "@heroui/react";
+import {
+  isProductSortColumn,
+  productsListHref,
+  type ProductSortColumn,
+} from "@/lib/products/products-list-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 function EditProductIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -93,57 +97,6 @@ function formatMoney(v: string | null): string {
   });
 }
 
-function sellingPriceSortValue(v: string | null): number | null {
-  if (v == null || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-/** Null / missing prices sort last in both directions */
-function compareSellingPrice(
-  a: string | null,
-  b: string | null,
-  descending: boolean,
-): number {
-  const av = sellingPriceSortValue(a);
-  const bv = sellingPriceSortValue(b);
-  if (av === null && bv === null) return 0;
-  if (av === null) return 1;
-  if (bv === null) return -1;
-  const base = av - bv;
-  return descending ? -base : base;
-}
-
-function sortProductRows(
-  rows: ProductRow[],
-  descriptor: SortDescriptor,
-): ProductRow[] {
-  const col = String(descriptor.column);
-  const dir = descriptor.direction === "descending";
-  return [...rows].sort((a, b) => {
-    let cmp = 0;
-    switch (col) {
-      case "name":
-        cmp = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-        break;
-      case "sku":
-        cmp = a.sku.localeCompare(b.sku, undefined, { sensitivity: "base" });
-        break;
-      case "quantityOnHand":
-        cmp = a.quantityOnHand - b.quantityOnHand;
-        break;
-      case "isLowStock":
-        cmp = Number(a.isLowStock) - Number(b.isLowStock);
-        break;
-      case "sellingPrice":
-        return compareSellingPrice(a.sellingPrice, b.sellingPrice, dir);
-      default:
-        return 0;
-    }
-    return dir ? -cmp : cmp;
-  });
-}
-
 function SortHeader({
   label,
   sortDirection,
@@ -170,35 +123,89 @@ function SortHeader({
 
 export function ProductsTableClient({
   products,
+  totalCount,
+  page,
+  pageSize,
+  q,
+  sortColumn,
+  sortDescending,
   orgDefaultLowStock,
 }: {
   products: ProductRow[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  q: string;
+  sortColumn: ProductSortColumn;
+  sortDescending: boolean;
   orgDefaultLowStock: number;
 }) {
-  const [q, setQ] = useState("");
-  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: "name",
-    direction: "ascending",
-  });
+  const router = useRouter();
+  const [qInput, setQInput] = useState(q);
 
-  const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return products;
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s),
-    );
-  }, [products, q]);
+  const patchHref = (patch: Partial<{
+    page: number;
+    q: string;
+    sortColumn: ProductSortColumn;
+    sortDescending: boolean;
+  }>) =>
+    productsListHref({
+      page,
+      q,
+      sortColumn,
+      sortDescending,
+      ...patch,
+    });
 
-  const sorted = useMemo(
-    () => sortProductRows(filtered, sortDescriptor),
-    [filtered, sortDescriptor],
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (qInput.trim() === q.trim()) return;
+      router.replace(
+        productsListHref({
+          page: 1,
+          q: qInput,
+          sortColumn,
+          sortDescending,
+        }),
+        { scroll: false },
+      );
+    }, 450);
+    return () => window.clearTimeout(id);
+  }, [qInput, q, router, sortColumn, sortDescending]);
+
+  const sortDescriptor = useMemo<SortDescriptor>(
+    () => ({
+      column: sortColumn,
+      direction: sortDescending ? "descending" : "ascending",
+    }),
+    [sortColumn, sortDescending],
   );
 
+  function handleSortChange(desc: SortDescriptor) {
+    const col = String(desc.column);
+    if (!isProductSortColumn(col)) return;
+    router.push(
+      patchHref({
+        sortColumn: col,
+        sortDescending: desc.direction === "descending",
+        page: 1,
+      }),
+      { scroll: false },
+    );
+  }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const rangeFrom =
+    totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeTo = Math.min(page * pageSize, totalCount);
+
   const emptyMessage =
-    products.length === 0
+    totalCount === 0 && !q.trim()
       ? "No products yet. Add your first one."
       : "No matches for this search.";
+
+  const prevHref = patchHref({ page: page - 1 });
+  const nextHref = patchHref({ page: page + 1 });
 
   return (
     <div className="flex flex-col gap-5">
@@ -209,9 +216,9 @@ export function ProductsTableClient({
             inputVariants({ variant: "primary" }),
             "border-default-200/90 h-10 min-h-10 max-w-full shrink rounded-3xl px-4 text-sm shadow-none placeholder:text-foreground/45 sm:max-w-sm md:h-9 md:min-h-9",
           )}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => setQInput(e.target.value)}
           placeholder="Search name or SKU…"
-          value={q}
+          value={qInput}
         />
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <BulkUploadProductsButton />
@@ -234,13 +241,55 @@ export function ProductsTableClient({
         {orgDefaultLowStock}
       </p>
 
+      <div className="text-foreground/65 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <p>
+          {totalCount === 0
+            ? q.trim()
+              ? "No matching products."
+              : "No products yet."
+            : `Showing ${rangeFrom}–${rangeTo} of ${totalCount}`}
+        </p>
+        <nav
+          aria-label="Pagination"
+          className="flex flex-wrap items-center gap-2"
+        >
+          <Link
+            aria-disabled={page <= 1}
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "sm" }),
+              "no-underline",
+              page <= 1 && "pointer-events-none opacity-45",
+            )}
+            href={prevHref}
+            scroll={false}
+          >
+            Previous
+          </Link>
+          <span className="text-foreground/55 tabular-nums">
+            Page {page} of {totalPages}
+          </span>
+          <Link
+            aria-disabled={page >= totalPages}
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "sm" }),
+              "no-underline",
+              page >= totalPages && "pointer-events-none opacity-45",
+            )}
+            href={nextHref}
+            scroll={false}
+          >
+            Next
+          </Link>
+        </nav>
+      </div>
+
       <div className="border-default-200/90 dark:border-default-100 shadow-sm ring-black/[0.03] dark:ring-white/[0.05] overflow-x-auto rounded-xl border ring-1">
         <Table>
           <Table.ScrollContainer>
             <Table.Content
               aria-label="Products"
               className="min-w-[640px]"
-              onSortChange={setSortDescriptor}
+              onSortChange={handleSortChange}
               sortDescriptor={sortDescriptor}
             >
               <Table.Header>
@@ -275,7 +324,7 @@ export function ProductsTableClient({
                 <Table.Column className="text-right">Actions</Table.Column>
               </Table.Header>
               <Table.Body renderEmptyState={() => emptyMessage}>
-                {sorted.map((p) => (
+                {products.map((p) => (
                   <Table.Row id={p.id} key={p.id}>
                     <Table.Cell className="font-medium">{p.name}</Table.Cell>
                     <Table.Cell className="text-foreground/80">
@@ -359,7 +408,6 @@ export function DeleteProductButton({
       toast.success("Product deleted", {
         description: "It has been removed from your inventory.",
       });
-      router.push("/products");
       router.refresh();
     } catch {
       setDialogOpen(false);
