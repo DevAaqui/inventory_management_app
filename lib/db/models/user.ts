@@ -59,6 +59,7 @@ export function initUserModel(sequelize: Sequelize): typeof User {
     },
     {
       sequelize,
+      modelName: "User",
       tableName: "users",
       timestamps: true,
       createdAt: "created_at",

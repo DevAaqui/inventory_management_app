@@ -32,6 +32,7 @@ export function initRoleModel(sequelize: Sequelize): typeof Role {
     },
     {
       sequelize,
+      modelName: "Role",
       tableName: "roles",
       timestamps: true,
       createdAt: "created_at",

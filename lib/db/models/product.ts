@@ -116,6 +116,7 @@ export function initProductModel(sequelize: Sequelize): typeof Product {
     },
     {
       sequelize,
+      modelName: "Product",
       tableName: "products",
       timestamps: true,
       createdAt: "created_at",

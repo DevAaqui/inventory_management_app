@@ -43,6 +43,7 @@ export function initOrganizationModel(sequelize: Sequelize): typeof Organization
     },
     {
       sequelize,
+      modelName: "Organization",
       tableName: "organizations",
       timestamps: true,
       createdAt: "created_at",
