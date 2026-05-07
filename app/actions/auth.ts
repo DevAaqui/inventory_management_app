@@ -47,11 +47,13 @@ export type AuthActionState = {
   error?: string;
 };
 
+/** Returns the first validation message from a Zod error for display. */
 function firstZodMessage(err: z.ZodError): string {
   const issue = err.issues[0];
   return issue?.message ?? "Invalid input";
 }
 
+/** Creates org + user, hashes password, opens session, redirects to dashboard. */
 export async function signupAction(
   _prev: AuthActionState,
   formData: FormData,
@@ -94,6 +96,7 @@ export async function signupAction(
   redirect("/dashboard");
 }
 
+/** Verifies credentials, opens session, redirects to dashboard. */
 export async function loginAction(
   _prev: AuthActionState,
   formData: FormData,
@@ -142,6 +145,7 @@ export async function loginAction(
   redirect("/dashboard");
 }
 
+/** Clears session and redirects to login. */
 export async function logoutAction(): Promise<void> {
   const session = await getSession();
   session.destroy();

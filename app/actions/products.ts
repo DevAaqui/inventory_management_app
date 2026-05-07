@@ -19,6 +19,7 @@ import { getSession } from "@/lib/session";
 
 export type ProductActionState = { error?: string };
 
+/** Ensures a logged-in user with an organization; otherwise redirects to login. */
 async function requireOrganizationId(): Promise<string> {
   const session = await getSession();
   if (!session.isLoggedIn || !session.organizationId) {
@@ -43,6 +44,7 @@ async function requireAuthContext(): Promise<{
   return { organizationId: session.organizationId, userId: session.userId };
 }
 
+/** Parses product form, inserts for current org; redirects on success. */
 export async function createProductAction(
   _prev: ProductActionState,
   formData: FormData,
@@ -67,6 +69,7 @@ export async function createProductAction(
   redirect("/products?saved=created");
 }
 
+/** Parses product form, updates by id for current org (with user for audit); redirects on success. */
 export async function updateProductAction(
   productId: string,
   _prev: ProductActionState,
@@ -102,6 +105,7 @@ export async function updateProductAction(
 
 export type DeleteProductResult = { ok: true } | { error: string };
 
+/** Deletes a product for the current org and revalidates /products. */
 export async function deleteProductAction(
   productId: string,
 ): Promise<DeleteProductResult> {
@@ -129,6 +133,7 @@ export type BulkUploadProductsResult =
   | { ok: true; created: number }
   | { error: string; issues?: { row: number; message: string }[] };
 
+/** Parses XLSX (≤5 MB), rejects overlapping SKUs, bulk-creates products for current org. */
 export async function bulkUploadProductsAction(
   formData: FormData,
 ): Promise<BulkUploadProductsResult> {
@@ -178,6 +183,7 @@ export async function bulkUploadProductsAction(
   }
 }
 
+/** Applies a signed stock delta with optional note; revalidates product pages. */
 export async function adjustStockAction(
   productId: string,
   formData: FormData,

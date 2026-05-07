@@ -1,4 +1,6 @@
-/** Parse "Adjust stock" form: signed whole-number delta and optional note (FR-5). */
+/**
+ * Adjust-stock FormData: non-zero whole-number delta and optional note (≤2000 chars). FR-5.
+ */
 export function parseAdjustStockFormData(formData: FormData):
   | { ok: true; delta: number; note: string | null }
   | { ok: false; error: string } {

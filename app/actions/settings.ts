@@ -17,11 +17,13 @@ export type SettingsActionState = {
   success?: boolean;
 };
 
+/** Returns the first validation message from a Zod error for display. */
 function firstZodMessage(err: z.ZodError): string {
   const issue = err.issues[0];
   return issue?.message ?? "Invalid input";
 }
 
+/** Updates the org-wide default low-stock threshold from form data; revalidates related routes. */
 export async function updateDefaultLowStockAction(
   formData: FormData,
 ): Promise<SettingsActionState> {

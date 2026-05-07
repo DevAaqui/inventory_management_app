@@ -1,6 +1,8 @@
 import type { CreateProductInput } from "@/lib/db/product-repository";
 
-/** Shared validation for create / update product forms. */
+/**
+ * Create/update product FormData → validated {@link CreateProductInput} (shared rules for forms and XLSX rows).
+ */
 export function parseProductFormData(formData: FormData):
   | { ok: true; data: CreateProductInput }
   | { ok: false; error: string } {

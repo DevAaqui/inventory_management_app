@@ -4,6 +4,11 @@ import ExcelJS from "exceljs";
 import type { CreateProductInput } from "@/lib/db/product-repository";
 import { parseProductFormData } from "./parse-product-form";
 
+/**
+ * Bulk product import: first worksheet only, flexible column headers, each row validated via
+ * {@link parseProductFormData} (required columns name, SKU, quantity).
+ */
+
 const MAX_DATA_ROWS = 1000;
 
 /** Normalize spreadsheet header text to a key for lookup. */
@@ -32,6 +37,7 @@ const HEADER_TO_FORM_FIELD: Record<string, string> = {
 
 const REQUIRED_FORM_FIELDS = ["name", "sku", "quantityOnHand"] as const;
 
+/** Best-effort string from an Excel cell (numbers, dates, rich text, formula result). */
 function cellToString(cell: ExcelJS.Cell | null | undefined): string {
   if (!cell || cell.value === null || cell.value === undefined) {
     return "";
@@ -69,6 +75,7 @@ function cellToString(cell: ExcelJS.Cell | null | undefined): string {
   return String(v).trim();
 }
 
+/** Outcome of parsing an upload buffer: ready-to-insert rows, or error + optional per-row issues. */
 export type XlsxParseResult =
   | { ok: true; items: CreateProductInput[] }
   | {
@@ -77,6 +84,7 @@ export type XlsxParseResult =
       issues?: { row: number; message: string }[];
     };
 
+/** Read `.xlsx` from buffer, map header row to fields, validate data rows and dedupe SKUs within the file. */
 export async function parseProductsXlsxBuffer(
   buffer: NodeBuffer,
 ): Promise<XlsxParseResult> {

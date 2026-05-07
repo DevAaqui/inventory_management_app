@@ -1,3 +1,7 @@
+/**
+ * /products listing: URL search params (page, q, sort, dir) and helpers to build links.
+ */
+
 export type ProductSortColumn =
   | "name"
   | "sku"
@@ -5,8 +9,10 @@ export type ProductSortColumn =
   | "isLowStock"
   | "sellingPrice";
 
+/** Rows per page on the product list. */
 export const PRODUCTS_PAGE_SIZE = 10;
 
+/** Allowed `sort` query values for the product list. */
 export const PRODUCT_SORT_COLUMNS: readonly ProductSortColumn[] = [
   "name",
   "sku",
@@ -15,6 +21,7 @@ export const PRODUCT_SORT_COLUMNS: readonly ProductSortColumn[] = [
   "sellingPrice",
 ] as const;
 
+/** Normalized state extracted from `/products?…` query params. */
 export type ParsedProductsListQuery = {
   page: number;
   q: string;
@@ -22,11 +29,12 @@ export type ParsedProductsListQuery = {
   sortDescending: boolean;
 };
 
+/** Whether `v` is a supported product list sort column. */
 export function isProductSortColumn(v: string): v is ProductSortColumn {
   return (PRODUCT_SORT_COLUMNS as readonly string[]).includes(v);
 }
 
-/** Parse `/products` URL search params (server or consistent shapes). */
+/** Parse `page`, `q`, `sort`, and `dir` from a Next/searchParams-style record. */
 export function parseProductsListQuery(
   raw: Record<string, string | string[] | undefined>,
 ): ParsedProductsListQuery {
@@ -53,6 +61,7 @@ export function parseProductsListQuery(
   return { page, q, sortColumn, sortDescending };
 }
 
+/** Build `/products` path with query string reflecting parsed list state. */
 export function productsListHref(q: ParsedProductsListQuery): string {
   const params = new URLSearchParams();
   if (q.page > 1) params.set("page", String(q.page));
@@ -64,6 +73,7 @@ export function productsListHref(q: ParsedProductsListQuery): string {
   return s ? `/products?${s}` : "/products";
 }
 
+/** Same as productsListHref after merging a partial update into `base`. */
 export function productsListHrefPatch(
   base: ParsedProductsListQuery,
   patch: Partial<ParsedProductsListQuery>,
